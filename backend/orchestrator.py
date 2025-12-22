@@ -1,7 +1,7 @@
 import os
 from typing import TypedDict, Literal, Optional
 from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.graph import StateGraph, END
 from dotenv import load_dotenv
 
@@ -19,10 +19,17 @@ class AgentState(TypedDict):
 
 
 def get_llm():
+    """
+    Создаём LLM-клиент для OpenRouter с учётом новой архитектуры langchain-openai.
+
+    В актуальных версиях используются аргументы api_key / base_url / model,
+    а не openai_api_key / openai_api_base / model_name.
+    """
+
     return ChatOpenAI(
-        openai_api_key=os.getenv("OPENROUTER_API_KEY"),
-        openai_api_base="https://openrouter.ai/api/v1",
-        model_name=os.getenv("MODEL_NAME", "openai/gpt-4o"),
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        base_url="https://openrouter.ai/api/v1",
+        model=os.getenv("MODEL_NAME", "openai/gpt-4o"),
         temperature=0.7,
     )
 
