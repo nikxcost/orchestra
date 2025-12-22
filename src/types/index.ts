@@ -9,6 +9,8 @@ export interface QueryResponse {
   review_result: string;
   context: string;
   iteration_count: number;
+  // Подробный человекочитаемый лог шагов пайплайна
+  log: string[];
 }
 
 export interface Agent {

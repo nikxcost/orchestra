@@ -1,6 +1,6 @@
 import { QueryResponse } from '../types';
 import { AGENTS } from '../config/agents';
-import { CheckCircle2, RefreshCw, AlertCircle } from 'lucide-react';
+import { CheckCircle2, RefreshCw, AlertCircle, ListChecks } from 'lucide-react';
 
 interface ResultDisplayProps {
   result: QueryResponse;
@@ -8,6 +8,15 @@ interface ResultDisplayProps {
 
 export const ResultDisplay = ({ result }: ResultDisplayProps) => {
   const selectedAgent = AGENTS.find((a) => a.id === result.route);
+
+  const getStepLabel = (entry: string) => {
+    if (entry.includes('Оркестратор')) return 'Оркестратор';
+    if (entry.includes('Агент')) return 'Агент';
+    if (entry.includes('Ревьюер')) return 'Ревьюер';
+    if (entry.includes('Финальный ответ') || entry.includes('🏁')) return 'Финальный ответ';
+    if (entry.includes('Итерация доработки')) return 'Доработка';
+    return 'Шаг';
+  };
 
   return (
     <div className="w-full max-w-4xl space-y-4 animate-fadeIn">
@@ -55,10 +64,39 @@ export const ResultDisplay = ({ result }: ResultDisplayProps) => {
         </div>
       </div>
 
+      {/* Таймлайн / лог выполнения пайплайна */}
+      {(result.log && result.log.length > 0) && (
+        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <div className="flex items-center gap-2 mb-3">
+            <ListChecks className="w-5 h-5 text-gray-700" />
+            <h4 className="font-semibold text-gray-800">Ход выполнения запроса (фактический таймлайн)</h4>
+          </div>
+          <ol className="space-y-3 text-sm text-gray-700">
+            {result.log.map((entry, index) => (
+              <li key={index} className="flex gap-3 items-start">
+                <div className="flex flex-col items-center mt-0.5">
+                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                  {index < result.log.length - 1 && (
+                    <div className="w-px flex-1 bg-blue-200 mt-1" />
+                  )}
+                </div>
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-blue-700 mb-1">
+                    {getStepLabel(entry)}
+                  </div>
+                  <div className="whitespace-pre-wrap">{entry}</div>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {/* Старый текстовый контекст оставляем как резервный источник информации */}
       {result.context && (
         <details className="bg-gray-50 rounded-lg p-4 border border-gray-200">
           <summary className="cursor-pointer font-medium text-gray-700 hover:text-gray-900">
-            Контекст выполнения
+            Контекст выполнения (сырой)
           </summary>
           <pre className="mt-3 text-sm text-gray-600 whitespace-pre-wrap font-mono">
             {result.context}

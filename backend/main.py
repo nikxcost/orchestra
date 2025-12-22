@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from orchestrator import process_query
 import traceback
+from typing import List
 
 app = FastAPI(title="Multi-Agent Orchestrator API")
 
@@ -26,6 +27,8 @@ class QueryResponse(BaseModel):
     review_result: str
     context: str
     iteration_count: int
+    # Подробный лог выполнения пайплайна
+    log: List[str]
 
 
 @app.get("/")
@@ -58,7 +61,8 @@ async def query_orchestrator(request: QueryRequest):
             agent_response=result.get("agent_response", ""),
             review_result=result.get("review_result", ""),
             context=result.get("context", ""),
-            iteration_count=result.get("iteration_count", 0)
+            iteration_count=result.get("iteration_count", 0),
+            log=result.get("log", []),
         )
 
     except Exception as e:
