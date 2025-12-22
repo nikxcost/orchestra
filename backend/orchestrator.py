@@ -1,5 +1,5 @@
 import os
-from typing import TypedDict, Literal, Optional
+from typing import TypedDict, Literal, Optional, List
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.graph import StateGraph, END
@@ -16,6 +16,8 @@ class AgentState(TypedDict):
     revised_instructions: Optional[str]
     context: Optional[str]
     iteration_count: int
+    # Подробные человекочитаемые шаги выполнения пайплайна
+    log: List[str]
 
 
 def get_llm():
@@ -44,6 +46,13 @@ MINI_AGENTS_PROMPTS = {
 
 
 def route_question(state: AgentState) -> AgentState:
+    state.setdefault("log", [])
+    state["log"].append(
+        "🔹 Оркестратор: анализируем запрос и выбираем агента...\n"
+        f"   Входной запрос пользователя:\n"
+        f"   {state['input']}"
+    )
+
     llm = get_llm()
 
     routing_prompt = f"""Вы оркестратор-маршрутизатор. Проанализируйте запрос пользователя и определите,
@@ -65,35 +74,56 @@ def route_question(state: AgentState) -> AgentState:
     ]
 
     response = llm.invoke(messages)
-    route = response.content.strip().lower()
+    raw_route = response.content.strip()
+    route = raw_route.lower()
 
     if route not in MINI_AGENTS_PROMPTS:
         route = "agent5"
 
     state["route"] = route
     state["context"] = f"Запрос направлен к {route}"
+    state["log"].append(
+        "✅ Оркестратор: принял решение о маршрутизации\n"
+        f"   Ответ LLM (сырое значение): {raw_route}\n"
+        f"   Выбранный агент: {route}"
+    )
 
     return state
 
 
 def mini_agent_node(agent_name: str):
     def node_function(state: AgentState) -> AgentState:
+        state.setdefault("log", [])
+        state["log"].append(
+            f"🔹 Агент {agent_name}: получен запрос на обработку\n"
+            f"   Системный промпт:\n"
+            f"   {MINI_AGENTS_PROMPTS[agent_name]}\n"
+            f"   Запрос пользователя (c учётом доработок, если есть):"
+        )
+
         llm = get_llm()
 
         system_prompt = MINI_AGENTS_PROMPTS[agent_name]
         user_query = state["input"]
 
         if state.get("revised_instructions"):
-            user_query = f"{user_query}\n\nДополнительные инструкции: {state['revised_instructions']}"
+            user_query = f"{user_query}\n\nДополнительные инструкции от ревьюера: {state['revised_instructions']}"
 
         messages = [
             SystemMessage(content=system_prompt),
             HumanMessage(content=user_query)
         ]
 
+        state["log"].append(f"   Итоговый текст, отправленный агенту:\n{user_query}")
+
         response = llm.invoke(messages)
         state["agent_response"] = response.content
         state["context"] = f"{state.get('context', '')}\nОтвет получен от {agent_name}"
+        state["log"].append(
+            f"✅ Агент {agent_name}: сформировал ответ\n"
+            f"   Ответ агента:\n"
+            f"   {state['agent_response']}"
+        )
 
         return state
 
@@ -101,11 +131,21 @@ def mini_agent_node(agent_name: str):
 
 
 def review_result(state: AgentState) -> AgentState:
+    state.setdefault("log", [])
+    state["log"].append(
+        "🔹 Ревьюер: проверяем качество ответа агента\n"
+        f"   Запрос пользователя:\n"
+        f"   {state['input']}\n"
+        "   Ответ агента для проверки:\n"
+        f"   {state.get('agent_response', '')}"
+    )
+
     llm = get_llm()
 
     max_iterations = 2
     if state.get("iteration_count", 0) >= max_iterations:
         state["review_result"] = "approved"
+        state["log"].append("ℹ️ Достигнут лимит итераций, ответ принудительно одобрен")
         return state
 
     review_prompt = f"""Вы ревьюер. Проверьте ответ агента на соответствие запросу пользователя.
@@ -132,6 +172,11 @@ def review_result(state: AgentState) -> AgentState:
 
     if state["review_result"] == "needs_revision" and len(result_parts) > 1:
         state["revised_instructions"] = result_parts[1].strip()
+        state["log"].append(
+            f"⚠️ Ревьюер: требуется доработка — {state['revised_instructions']}"
+        )
+    else:
+        state["log"].append("✅ Ревьюер: ответ одобрен")
 
     state["context"] = f"{state.get('context', '')}\nРевью: {state['review_result']}"
 
@@ -141,11 +186,16 @@ def review_result(state: AgentState) -> AgentState:
 def revise_task(state: AgentState) -> AgentState:
     state["iteration_count"] = state.get("iteration_count", 0) + 1
     state["context"] = f"{state.get('context', '')}\nИтерация доработки: {state['iteration_count']}"
+    state.setdefault("log", [])
+    state["log"].append(f"🔁 Итерация доработки: #{state['iteration_count']}")
     return state
 
 
 def final_answer(state: AgentState) -> AgentState:
-    state["context"] = f"{state.get('context', '')}\nФинальный ответ сформирован"
+    state.setdefault("log", [])
+    state["log"].append("🏁 Финальный ответ сформирован и готов к отправке пользователю")
+    # Дублируем полный путь запроса в context, чтобы его можно было увидеть как сырой текст
+    state["context"] = "\n".join(state["log"])
     return state
 
 
@@ -226,6 +276,7 @@ async def process_query(user_input: str) -> dict:
         "revised_instructions": None,
         "context": "",
         "iteration_count": 0,
+        "log": ["▶️ Запрос получен от пользователя"],
     }
 
     result = app.invoke(initial_state)
@@ -237,4 +288,5 @@ async def process_query(user_input: str) -> dict:
         "review_result": result.get("review_result"),
         "context": result.get("context"),
         "iteration_count": result.get("iteration_count", 0),
+        "log": result.get("log", []),
     }

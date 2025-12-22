@@ -96,9 +96,11 @@ function App() {
           )}
 
           {isLoading && (
-            <div className="w-full max-w-4xl bg-blue-50 border border-blue-200 rounded-lg p-6 flex items-center justify-center gap-3">
+            <div className="w-full max-w-4xl bg-blue-50 border border-blue-200 rounded-lg p-6 flex items-center gap-3">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600" />
-              <p className="text-blue-800 font-medium">Обработка запроса...</p>
+              <p className="text-blue-800 font-medium">
+                Обработка запроса... Ожидаем полный лог работы оркестратора и агентов.
+              </p>
             </div>
           )}
 
