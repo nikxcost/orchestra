@@ -19,3 +19,11 @@ export interface Agent {
   description: string;
   color: string;
 }
+
+// Краткая запись истории обращений пользователя
+export interface QueryHistoryItem {
+  id: string;
+  createdAt: string;
+  request: string;
+  response: QueryResponse;
+}
