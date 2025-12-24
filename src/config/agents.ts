@@ -3,8 +3,8 @@ import { Agent } from '../types';
 export const AGENTS: Agent[] = [
   {
     id: 'agent1',
-    name: 'SQL Агент',
-    description: 'Специалист по SQL-запросам и базам данных',
+    name: 'Агент вопросов',
+    description: 'Генерация уточняющих вопросов для стейкхолдеров',
     color: 'bg-blue-500',
   },
   {

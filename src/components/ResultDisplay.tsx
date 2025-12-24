@@ -1,6 +1,7 @@
 import { QueryResponse } from '../types';
 import { AGENTS } from '../config/agents';
 import { CheckCircle2, RefreshCw, AlertCircle, ListChecks } from 'lucide-react';
+import Markdown from 'markdown-to-jsx';
 
 interface ResultDisplayProps {
   result: QueryResponse;
@@ -35,7 +36,9 @@ export const ResultDisplay = ({ result }: ResultDisplayProps) => {
 
         <div className="mb-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
           <p className="text-sm font-medium text-blue-900 mb-2">Ответ агента:</p>
-          <p className="text-gray-800 whitespace-pre-wrap">{result.agent_response}</p>
+          <div className="prose prose-sm max-w-none text-gray-800">
+            <Markdown>{result.agent_response}</Markdown>
+          </div>
         </div>
 
         <div className="flex items-center gap-4 text-sm">
