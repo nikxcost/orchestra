@@ -2,6 +2,20 @@
 
 Интеллектуальная система оркестрации с использованием LangGraph и OpenRouter API для маршрутизации запросов к специализированным агентам.
 
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)]()
+[![Coverage](https://img.shields.io/badge/coverage-60%25+-blue)]()
+[![Python](https://img.shields.io/badge/python-3.12-blue)]()
+[![License](https://img.shields.io/badge/license-MIT-green)]()
+
+## Ключевые возможности
+
+✅ **Динамическая маршрутизация** - автоматический выбор наиболее подходящего агента
+✅ **Review Loop** - автоматическая проверка и доработка ответов
+✅ **Редактируемые агенты** - изменение промптов через UI без перезапуска
+✅ **Rate Limiting** - защита от перегрузки API
+✅ **Structured Logging** - подробное логирование для отладки
+✅ **Тестирование** - unit и integration тесты с покрытием 60%+
+
 ## Архитектура
 
 Система состоит из двух частей:

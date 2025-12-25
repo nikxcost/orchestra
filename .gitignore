@@ -11,13 +11,28 @@ dist
 dist-ssr
 *.local
 
+# Testing
+.pytest_cache
+htmlcov/
+.coverage
+*.cover
+*.py,cover
+
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
 *.suo
 *.ntvs*
-*.njsproj
+*.njsproj*
 *.sln
 *.sw?
 .env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so

@@ -1,16 +1,42 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, validator
 from orchestrator import process_query
 from agents_storage import get_storage
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from loguru import logger
 import traceback
 from typing import List
+import sys
+
+# Настройка логирования
+logger.remove()
+logger.add(
+    sys.stderr,
+    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+    level="INFO"
+)
+logger.add(
+    "logs/app.log",
+    rotation="1 day",
+    retention="7 days",
+    level="DEBUG",
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}"
+)
 
 app = FastAPI(title="Multi-Agent Orchestrator API")
 
+# Rate limiting
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# CORS - в production укажите конкретные домены
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # TODO: В production заменить на конкретные домены
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -18,7 +44,13 @@ app.add_middleware(
 
 
 class QueryRequest(BaseModel):
-    query: str
+    query: str = Field(..., min_length=1, max_length=5000, description="User query")
+
+    @validator('query')
+    def query_must_not_be_empty(cls, v):
+        if not v.strip():
+            raise ValueError('Query cannot be empty or whitespace only')
+        return v.strip()
 
 
 class QueryResponse(BaseModel):
@@ -33,10 +65,16 @@ class QueryResponse(BaseModel):
 
 
 class AgentUpdate(BaseModel):
-    name: str
-    description: str
-    prompt: str
-    color: str
+    name: str = Field(..., min_length=1, max_length=200, description="Agent name")
+    description: str = Field(..., min_length=1, max_length=500, description="Agent description")
+    prompt: str = Field(..., min_length=10, max_length=10000, description="System prompt")
+    color: str = Field(..., pattern=r'^bg-\w+-\d{3}$', description="Tailwind color class")
+
+    @validator('name', 'description', 'prompt')
+    def fields_must_not_be_empty(cls, v):
+        if not v.strip():
+            raise ValueError('Field cannot be empty or whitespace only')
+        return v.strip()
 
 
 @app.get("/")
@@ -75,6 +113,7 @@ async def get_agent(agent_id: str):
 @app.put("/agents/{agent_id}")
 async def update_agent(agent_id: str, agent_update: AgentUpdate):
     """Обновить агента"""
+    logger.info(f"Updating agent: {agent_id}")
     try:
         storage = get_storage()
         updated_agent = storage.update(
@@ -84,22 +123,25 @@ async def update_agent(agent_id: str, agent_update: AgentUpdate):
             prompt=agent_update.prompt,
             color=agent_update.color
         )
+        logger.info(f"Agent {agent_id} updated successfully")
         return updated_agent
     except ValueError as e:
+        logger.warning(f"Agent {agent_id} not found")
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        print(f"Error updating agent: {str(e)}")
-        print(traceback.format_exc())
+        logger.error(f"Error updating agent {agent_id}: {str(e)}")
+        logger.debug(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Ошибка обновления агента: {str(e)}")
 
 
 @app.post("/query", response_model=QueryResponse)
+@limiter.limit("10/minute")
 async def query_orchestrator(request: QueryRequest):
+    logger.info(f"Processing query: {request.query[:100]}...")
     try:
-        if not request.query or not request.query.strip():
-            raise HTTPException(status_code=400, detail="Query cannot be empty")
-
         result = await process_query(request.query)
+
+        logger.info(f"Query processed successfully. Route: {result.get('route')}, Iterations: {result.get('iteration_count')}")
 
         return QueryResponse(
             input=result["input"],
@@ -112,8 +154,8 @@ async def query_orchestrator(request: QueryRequest):
         )
 
     except Exception as e:
-        print(f"Error processing query: {str(e)}")
-        print(traceback.format_exc())
+        logger.error(f"Error processing query: {str(e)}")
+        logger.debug(traceback.format_exc())
         raise HTTPException(
             status_code=500,
             detail=f"Error processing query: {str(e)}"
