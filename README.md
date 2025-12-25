@@ -62,22 +62,56 @@ cd backend
 pip install -r requirements.txt
 ```
 
-### 2. Настройка OpenRouter API
+### 2. Настройка переменных окружения
+
+#### Backend
 
 Создайте файл `.env` в папке `backend`:
+
+```bash
+cd backend
+cp .env.example .env
+```
+
+Отредактируйте `.env`:
+
+```env
+# OpenRouter API Configuration
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+MODEL_NAME=openai/gpt-4o
+
+# Security: API Key для аутентификации
+API_KEY=your_secure_api_key_here
+
+# CORS: Разрешенные origins (через запятую)
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173
+```
+
+**Генерация безопасного API ключа:**
+
+```bash
+python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+Получить OpenRouter API ключ можно на [openrouter.ai](https://openrouter.ai/)
+
+#### Frontend
+
+Создайте файл `.env` в корневой папке:
 
 ```bash
 cp .env.example .env
 ```
 
-Отредактируйте `.env` и добавьте ваш API ключ:
+Отредактируйте `.env`:
 
 ```env
-OPENROUTER_API_KEY=your_openrouter_api_key_here
-MODEL_NAME=openai/gpt-4o
+# API Configuration
+VITE_API_BASE_URL=http://localhost:8000
+VITE_API_KEY=your_secure_api_key_here  # Должен совпадать с backend API_KEY
 ```
 
-Получить API ключ можно на [openrouter.ai](https://openrouter.ai/)
+**⚠️ ВАЖНО:** `VITE_API_KEY` должен совпадать с `API_KEY` из backend `.env` файла.
 
 ### 3. Запуск Backend
 
@@ -118,8 +152,16 @@ Frontend будет доступен на `http://localhost:5173`
 
 ## API Endpoints
 
+🔒 **Все endpoints (кроме `/health`) требуют аутентификацию через `X-API-Key` header.**
+
 ### POST /query
 Обработка запроса через оркестратор
+
+**Headers:**
+```
+X-API-Key: your_api_key_here
+Content-Type: application/json
+```
 
 **Request:**
 ```json
@@ -140,8 +182,43 @@ Frontend будет доступен на `http://localhost:5173`
 }
 ```
 
+### GET /agents
+Получить список всех агентов (требует аутентификацию)
+
+**Headers:**
+```
+X-API-Key: your_api_key_here
+```
+
+### GET /agents/{agent_id}
+Получить агента по ID (требует аутентификацию)
+
+**Headers:**
+```
+X-API-Key: your_api_key_here
+```
+
+### PUT /agents/{agent_id}
+Обновить агента (требует аутентификацию)
+
+**Headers:**
+```
+X-API-Key: your_api_key_here
+Content-Type: application/json
+```
+
+**Request:**
+```json
+{
+  "name": "Агент SQL",
+  "description": "Помощник по SQL запросам",
+  "prompt": "Вы эксперт по SQL...",
+  "color": "bg-blue-500"
+}
+```
+
 ### GET /health
-Проверка работоспособности API
+Проверка работоспособности API (не требует аутентификацию)
 
 ## Настройка агентов
 
@@ -173,6 +250,60 @@ MINI_AGENTS_PROMPTS = {
 - Vite
 - Lucide Icons
 
+## 🔒 Безопасность
+
+### API Key Аутентификация
+
+Все API endpoints (кроме `/health`) защищены API ключом:
+
+- ✅ **Обязательно** установите `API_KEY` в backend `.env`
+- ✅ **Обязательно** установите `VITE_API_KEY` в frontend `.env` (должен совпадать)
+- ✅ Используйте криптографически стойкий ключ (минимум 32 символа)
+
+**Генерация ключа:**
+```bash
+python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+### CORS Конфигурация
+
+По умолчанию разрешены только локальные origins. Для production:
+
+```env
+# backend/.env
+ALLOWED_ORIGINS=https://your-domain.com,https://www.your-domain.com
+```
+
+### Режим разработки
+
+Если `API_KEY` не установлен, backend будет работать **без аутентификации** (только для localhost разработки):
+
+```
+⚠️  API_KEY not set! API endpoints are unprotected. Set API_KEY in .env file.
+```
+
+⚠️ **Никогда не деплойте в production без API_KEY!**
+
+### Rate Limiting
+
+- `/query` endpoint: **10 запросов в минуту** на IP адрес
+- Защищает от злоупотребления OpenRouter API квотой
+
+## Документация
+
+📚 **Подробная документация находится в директории [`/docs`](docs/):**
+
+- 🎨 [**Design System**](docs/design-system.md) - Дизайн-система и UI/UX архитектура
+- ✏️ [**Agent Editor**](docs/agent-editor.md) - Редактирование агентов через UI
+- 🚀 [**Production Improvements**](docs/production-improvements.md) - Production-ready улучшения
+- 📖 [**Examples**](docs/examples.md) - Примеры использования и расширения системы
+
+### Backend Documentation
+
+- 🧪 [Testing Guide](backend/TESTING.md) - Руководство по тестированию
+- 📚 [Backend README](backend/README.md) - Документация backend
+- 🚀 [Deployment Guide](DEPLOYMENT.md) - Инструкции по развертыванию
+
 ## Возможные улучшения
 
 - Добавление истории запросов с использованием Supabase
@@ -180,7 +311,6 @@ MINI_AGENTS_PROMPTS = {
 - Визуализация графа выполнения в реальном времени
 - Добавление метрик и аналитики
 - Поддержка загрузки файлов для анализа
-- Кастомизация агентов через UI
 
 ## Лицензия
 

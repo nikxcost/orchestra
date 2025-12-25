@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, validator
 from orchestrator import process_query
@@ -8,8 +8,9 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from loguru import logger
 import traceback
-from typing import List
+from typing import List, Optional
 import sys
+import os
 
 # Настройка логирования
 logger.remove()
@@ -33,13 +34,42 @@ limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS - в production укажите конкретные домены
+# Security: API Key authentication
+API_KEY = os.getenv("API_KEY")
+if not API_KEY:
+    logger.warning("⚠️  API_KEY not set! API endpoints are unprotected. Set API_KEY in .env file.")
+else:
+    logger.info("✅ API_KEY configured successfully")
+
+async def verify_api_key(x_api_key: Optional[str] = Header(None)):
+    """Verify API key from X-API-Key header"""
+    # If API_KEY is not set, allow all requests (backward compatibility for localhost development)
+    if not API_KEY:
+        return None
+
+    if not x_api_key:
+        raise HTTPException(
+            status_code=401,
+            detail="Missing API key. Provide X-API-Key header."
+        )
+
+    if x_api_key != API_KEY:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid API key"
+        )
+
+    return x_api_key
+
+# CORS configuration
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: В production заменить на конкретные домены
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "X-API-Key"],
 )
 
 
@@ -93,16 +123,16 @@ async def health_check():
     return {"status": "healthy"}
 
 
-@app.get("/agents")
+@app.get("/agents", dependencies=[Depends(verify_api_key)])
 async def get_agents():
-    """Получить список всех агентов"""
+    """Получить список всех агентов (требует аутентификацию)"""
     storage = get_storage()
     return storage.get_all()
 
 
-@app.get("/agents/{agent_id}")
+@app.get("/agents/{agent_id}", dependencies=[Depends(verify_api_key)])
 async def get_agent(agent_id: str):
-    """Получить агента по ID"""
+    """Получить агента по ID (требует аутентификацию)"""
     storage = get_storage()
     agent = storage.get_by_id(agent_id)
     if not agent:
@@ -110,9 +140,9 @@ async def get_agent(agent_id: str):
     return agent
 
 
-@app.put("/agents/{agent_id}")
+@app.put("/agents/{agent_id}", dependencies=[Depends(verify_api_key)])
 async def update_agent(agent_id: str, agent_update: AgentUpdate):
-    """Обновить агента"""
+    """Обновить агента (требует аутентификацию)"""
     logger.info(f"Updating agent: {agent_id}")
     try:
         storage = get_storage()
@@ -134,7 +164,7 @@ async def update_agent(agent_id: str, agent_update: AgentUpdate):
         raise HTTPException(status_code=500, detail=f"Ошибка обновления агента: {str(e)}")
 
 
-@app.post("/query", response_model=QueryResponse)
+@app.post("/query", response_model=QueryResponse, dependencies=[Depends(verify_api_key)])
 @limiter.limit("10/minute")
 async def query_orchestrator(request: QueryRequest):
     logger.info(f"Processing query: {request.query[:100]}...")

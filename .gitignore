@@ -11,6 +11,9 @@ dist
 dist-ssr
 *.local
 
+# Backend generated config
+backend/agents_config.json
+
 # Testing
 .pytest_cache
 htmlcov/

@@ -24,19 +24,25 @@ VITE_API_BASE_URL=http://109.69.22.56/api
 ssh root@109.69.22.56
 ```
 
-**2. Обновите backend `.env` файл с CORS настройками:**
+**2. Обновите backend `.env` файл:**
 ```bash
 cd /root/orchestra
 nano backend/.env
 ```
 
-**Добавьте или обновите строку `ALLOWED_ORIGINS`:**
+**Добавьте следующие строки:**
 ```env
 OPENROUTER_API_KEY=ваш_существующий_ключ
-MODEL_NAME=openai/gpt-4o
-API_KEY=ваш_api_ключ_если_есть
-ALLOWED_ORIGINS=http://109.69.22.56,http://localhost:5173,http://localhost:3000
+MODEL_NAME=ваша_существующая_модель
+
+# API Key для аутентификации (обязательно!)
+API_KEY=CNRaeNw0q5XIMQJNN_9nC8O3X1l5HUT2sD83MXd68xk
+
+# CORS разрешенные origins
+ALLOWED_ORIGINS=http://109.69.22.56,http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173
 ```
+
+⚠️ **ВАЖНО:** API_KEY должен совпадать с VITE_API_KEY из frontend!
 
 **3. Запустите деплой скрипт:**
 ```bash
