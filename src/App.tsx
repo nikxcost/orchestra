@@ -214,7 +214,7 @@ function App() {
         <main className="flex-1 overflow-y-auto bg-gradient-to-b from-neutral-50 to-white">
           {!result && !isLoading && !error ? (
             // Welcome screen
-            <div className="h-full flex items-center justify-center px-4 py-12">
+            <div className="h-full flex items-start justify-center px-4 pt-20 pb-12 overflow-y-auto">
               <div className="max-w-5xl w-full animate-fadeIn">
                 <div className="text-center mb-16">
                   <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 mb-6 shadow-xl">
