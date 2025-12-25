@@ -11,6 +11,7 @@ import traceback
 from typing import List, Optional
 import sys
 import os
+from starlette.requests import Request
 
 # Настройка логирования
 logger.remove()
@@ -29,8 +30,25 @@ logger.add(
 
 app = FastAPI(title="Multi-Agent Orchestrator API")
 
-# Rate limiting
-limiter = Limiter(key_func=get_remote_address)
+# Custom function to get real IP behind nginx proxy
+def get_real_ip(request: Request) -> str:
+    """Get real client IP address, accounting for nginx proxy"""
+    # Check X-Forwarded-For header (set by nginx)
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        # X-Forwarded-For can be a comma-separated list, take the first one
+        return forwarded.split(",")[0].strip()
+
+    # Check X-Real-IP header (also set by nginx)
+    real_ip = request.headers.get("X-Real-IP")
+    if real_ip:
+        return real_ip
+
+    # Fallback to direct connection IP
+    return get_remote_address(request)
+
+# Rate limiting with proper IP detection behind proxy
+limiter = Limiter(key_func=get_real_ip)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
