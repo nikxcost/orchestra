@@ -15,7 +15,6 @@ function App() {
   const [history, setHistory] = useState<QueryHistoryItem[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [agents, setAgents] = useState<Agent[]>([]);
-  const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
   const [agentToEdit, setAgentToEdit] = useState<(Agent & { prompt: string }) | null>(null);
 
   useEffect(() => {
@@ -87,7 +86,6 @@ function App() {
       // Загружаем полные данные агента включая промпт
       const fullAgent = await getAgent(agent.id);
       setAgentToEdit(fullAgent);
-      setEditingAgent(agent);
     } catch (err) {
       console.error('Failed to load agent details:', err);
       alert('Не удалось загрузить данные агента');
@@ -108,7 +106,6 @@ function App() {
       setAgents(updatedAgents);
 
       setAgentToEdit(null);
-      setEditingAgent(null);
     } catch (err) {
       console.error('Failed to save agent:', err);
       throw err;
@@ -117,44 +114,47 @@ function App() {
 
   const handleCloseModal = () => {
     setAgentToEdit(null);
-    setEditingAgent(null);
   };
 
   return (
-    <div className="flex h-screen bg-white text-gray-800">
+    <div className="flex h-screen bg-neutral-50 text-neutral-900">
       {/* Sidebar */}
       <aside
         className={`${
-          isSidebarOpen ? 'w-64' : 'w-0'
-        } bg-gray-900 text-white transition-all duration-300 overflow-hidden flex flex-col`}
+          isSidebarOpen ? 'w-72' : 'w-0'
+        } bg-neutral-900 text-white transition-all duration-300 ease-in-out overflow-hidden flex flex-col shadow-2xl`}
       >
-        <div className="p-4 border-b border-gray-700">
+        <div className="p-4 border-b border-neutral-800">
           <button
             onClick={handleNewChat}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-gray-600 hover:bg-gray-800 transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 hover:border-neutral-600 transition-smooth focus-ring"
           >
-            <Plus className="w-4 h-4" />
-            <span className="text-sm font-medium">Новый чат</span>
+            <Plus className="w-5 h-5" />
+            <span className="text-sm font-semibold">Новый чат</span>
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-3">
           {history.length > 0 ? (
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               {history.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => handleHistoryClick(item)}
-                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors group"
+                  className="w-full text-left px-3 py-3 rounded-xl hover:bg-neutral-800 transition-smooth group"
                 >
-                  <div className="flex items-start gap-2">
-                    <MessageSquare className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-400" />
+                  <div className="flex items-start gap-3">
+                    <MessageSquare className="w-4 h-4 mt-0.5 flex-shrink-0 text-neutral-500 group-hover:text-neutral-300" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-200 truncate">
+                      <p className="text-sm text-neutral-200 truncate group-hover:text-white">
                         {item.request}
                       </p>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {new Date(item.createdAt).toLocaleDateString()}
+                      <p className="text-xs text-neutral-500 mt-1">
+                        {new Date(item.createdAt).toLocaleDateString('ru-RU', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
                       </p>
                     </div>
                   </div>
@@ -162,20 +162,23 @@ function App() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-500 text-center mt-8">
-              История пуста
-            </p>
+            <div className="text-center mt-12 px-4">
+              <MessageSquare className="w-10 h-10 mx-auto mb-3 text-neutral-700" />
+              <p className="text-sm text-neutral-500">
+                История пуста
+              </p>
+            </div>
           )}
         </div>
 
-        <div className="p-4 border-t border-gray-700">
-          <div className="flex items-center gap-2 text-xs">
-            <div className={`w-2 h-2 rounded-full ${
-              backendStatus === 'online' ? 'bg-green-500' :
-              backendStatus === 'offline' ? 'bg-red-500' :
-              'bg-yellow-500'
+        <div className="p-4 border-t border-neutral-800">
+          <div className="flex items-center gap-2.5 px-3 py-2 bg-neutral-800/50 rounded-lg">
+            <div className={`w-2.5 h-2.5 rounded-full ${
+              backendStatus === 'online' ? 'bg-success-500 shadow-lg shadow-success-500/50' :
+              backendStatus === 'offline' ? 'bg-error-500 shadow-lg shadow-error-500/50' :
+              'bg-warning-500 animate-pulse'
             }`} />
-            <span className="text-gray-400">
+            <span className="text-xs font-medium text-neutral-400">
               {backendStatus === 'online' ? 'Онлайн' :
                backendStatus === 'offline' ? 'Оффлайн' :
                'Проверка...'}
@@ -185,46 +188,56 @@ function App() {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col bg-white">
         {/* Header */}
-        <header className="border-b border-gray-200 px-4 py-3 flex items-center gap-4">
+        <header className="border-b border-neutral-200 bg-white/80 backdrop-blur-md px-6 py-4 flex items-center gap-4 sticky top-0 z-10">
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2.5 hover:bg-neutral-100 rounded-xl transition-smooth focus-ring"
+            aria-label={isSidebarOpen ? 'Закрыть сайдбар' : 'Открыть сайдбар'}
           >
             {isSidebarOpen ? (
-              <X className="w-5 h-5 text-gray-600" />
+              <X className="w-5 h-5 text-neutral-600" />
             ) : (
-              <Menu className="w-5 h-5 text-gray-600" />
+              <Menu className="w-5 h-5 text-neutral-600" />
             )}
           </button>
-          <h1 className="text-lg font-semibold text-gray-900">
-            Оркестратор агентов
+          <h1 className="text-xl font-bold text-neutral-900 bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
+            Orchestra
           </h1>
+          <span className="text-sm text-neutral-500 font-medium">
+            Оркестратор агентов
+          </span>
         </header>
 
         {/* Chat area */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto bg-gradient-to-b from-neutral-50 to-white">
           {!result && !isLoading && !error ? (
             // Welcome screen
-            <div className="h-full flex items-center justify-center px-4">
-              <div className="max-w-4xl w-full">
-                <div className="text-center mb-12">
-                  <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                  <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+            <div className="h-full flex items-center justify-center px-4 py-12">
+              <div className="max-w-5xl w-full animate-fadeIn">
+                <div className="text-center mb-16">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 mb-6 shadow-xl">
+                    <MessageSquare className="w-10 h-10 text-white" />
+                  </div>
+                  <h2 className="text-4xl font-bold text-neutral-900 mb-3">
                     Система оркестрации агентов
                   </h2>
-                  <p className="text-gray-600">
-                    Интеллектуальная маршрутизация запросов к специализированным агентам
+                  <p className="text-lg text-neutral-600 max-w-2xl mx-auto leading-relaxed">
+                    Интеллектуальная маршрутизация запросов к специализированным AI-агентам
                   </p>
                 </div>
 
                 {/* Agent cards */}
                 <div className="mb-8">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4 text-center">
-                    Доступные агенты
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                  <div className="flex items-center justify-center gap-2 mb-6">
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
+                    <h3 className="text-sm font-bold text-neutral-700 uppercase tracking-wider px-4">
+                      Доступные агенты
+                    </h3>
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     {agents.map((agent) => (
                       <AgentCard
                         key={agent.id}
@@ -239,28 +252,28 @@ function App() {
             </div>
           ) : (
             // Messages area
-            <div className="max-w-3xl mx-auto px-4 py-8">
+            <div className="max-w-4xl mx-auto px-6 py-10">
               {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-800">{error}</p>
+                <div className="mb-8 p-5 bg-error-50 border-2 border-error-200 rounded-2xl animate-slideUp">
+                  <p className="text-sm text-error-800 font-medium">{error}</p>
                   {backendStatus === 'offline' && (
-                    <p className="text-xs text-red-600 mt-2">
-                      Убедитесь, что backend запущен: <code className="bg-red-100 px-1 rounded">python backend/main.py</code>
+                    <p className="text-xs text-error-700 mt-3 bg-error-100 px-3 py-2 rounded-lg font-mono">
+                      Backend не запущен. Выполните: <code className="font-bold">python backend/main.py</code>
                     </p>
                   )}
                 </div>
               )}
 
               {isLoading && (
-                <div className="mb-6 flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                    <MessageSquare className="w-4 h-4 text-white" />
+                <div className="mb-8 flex items-start gap-4 animate-fadeIn">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-md">
+                    <MessageSquare className="w-5 h-5 text-white" />
                   </div>
-                  <div className="flex-1 pt-1">
+                  <div className="flex-1 pt-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <div className="w-2.5 h-2.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-2.5 h-2.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-2.5 h-2.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
                   </div>
                 </div>
@@ -272,14 +285,14 @@ function App() {
         </main>
 
         {/* Input area */}
-        <div className="border-t border-gray-200 bg-white">
-          <div className="max-w-3xl mx-auto px-4 py-4">
+        <div className="border-t border-neutral-200 bg-white shadow-2xl">
+          <div className="max-w-4xl mx-auto px-6 py-5">
             {result ? (
               // Показываем кнопку "Новый чат" после получения результата
               <button
                 onClick={handleNewChat}
-                className="w-full px-4 py-3 bg-gray-900 text-white text-base font-medium rounded-xl hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
-                style={{ minHeight: '52px' }}
+                className="w-full px-6 py-4 bg-neutral-900 text-white text-base font-semibold rounded-2xl hover:bg-neutral-700 hover:shadow-lg transition-smooth flex items-center justify-center gap-2.5 focus-ring"
+                style={{ minHeight: '60px' }}
               >
                 <Plus className="w-5 h-5" />
                 Новый чат

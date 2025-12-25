@@ -1,5 +1,6 @@
 import { Agent } from '../types';
 import { Pencil } from 'lucide-react';
+import { agentColors } from '../design/tokens';
 
 interface AgentCardProps {
   agent: Agent;
@@ -8,29 +9,44 @@ interface AgentCardProps {
 }
 
 export const AgentCard = ({ agent, isActive, onEdit }: AgentCardProps) => {
+  const colorScheme = agentColors[agent.color as keyof typeof agentColors] || agentColors['bg-blue-500'];
+
   return (
     <div
-      className={`relative p-4 rounded-lg border transition-all ${
+      className={`group relative p-5 rounded-xl border transition-smooth hover-lift ${
         isActive
-          ? 'border-blue-500 bg-blue-50'
-          : 'border-gray-200 bg-white hover:border-gray-300'
+          ? `border-primary-300 ${colorScheme.bgLight} shadow-md`
+          : 'border-neutral-200 bg-white hover:border-neutral-300 hover:shadow-md'
       }`}
     >
       {onEdit && (
         <button
           onClick={() => onEdit(agent)}
-          className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+          className="absolute top-3 right-3 p-1.5 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-lg transition-smooth opacity-0 group-hover:opacity-100 focus-ring"
           title="Редактировать агента"
+          aria-label="Редактировать агента"
         >
-          <Pencil className="w-3.5 h-3.5" />
+          <Pencil className="w-4 h-4" />
         </button>
       )}
 
-      <div className={`w-10 h-10 ${agent.color} rounded-lg mb-3 flex items-center justify-center text-white text-sm font-semibold`}>
+      {/* Agent icon with gradient */}
+      <div className={`w-12 h-12 bg-gradient-to-br ${colorScheme.gradient} rounded-xl mb-4 flex items-center justify-center text-white font-semibold text-base shadow-sm`}>
         {agent.id.replace('agent', '')}
       </div>
-      <h3 className="font-medium text-gray-900 mb-1 text-sm">{agent.name}</h3>
-      <p className="text-xs text-gray-600 leading-relaxed">{agent.description}</p>
+
+      {/* Agent info */}
+      <h3 className="font-semibold text-neutral-900 mb-1.5 text-sm leading-tight">
+        {agent.name}
+      </h3>
+      <p className="text-xs text-neutral-600 leading-relaxed line-clamp-2">
+        {agent.description}
+      </p>
+
+      {/* Active indicator */}
+      {isActive && (
+        <div className="absolute top-3 left-3 w-2 h-2 bg-primary-500 rounded-full animate-pulse" />
+      )}
     </div>
   );
 };
