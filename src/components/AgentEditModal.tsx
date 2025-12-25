@@ -56,19 +56,23 @@ export const AgentEditModal = ({ agent, isOpen, onClose, onSave }: AgentEditModa
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-scaleIn">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Редактирование агента: {agent.id}
-          </h2>
+        <div className="flex items-center justify-between p-6 border-b border-neutral-200 bg-neutral-50">
+          <div>
+            <h2 className="text-xl font-bold text-neutral-900">
+              Редактирование агента
+            </h2>
+            <p className="text-sm text-neutral-600 mt-1 font-mono">{agent.id}</p>
+          </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-neutral-200 rounded-xl transition-smooth focus-ring"
             disabled={isSaving}
+            aria-label="Закрыть модальное окно"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-neutral-600" />
           </button>
         </div>
 
@@ -76,87 +80,103 @@ export const AgentEditModal = ({ agent, isOpen, onClose, onSave }: AgentEditModa
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="agent-name" className="block text-sm font-semibold text-neutral-900 mb-2">
               Название агента
             </label>
             <input
+              id="agent-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Название агента"
+              className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-100 transition-smooth"
+              placeholder="Введите название агента"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="agent-description" className="block text-sm font-semibold text-neutral-900 mb-2">
               Описание
             </label>
             <input
+              id="agent-description"
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-100 transition-smooth"
               placeholder="Краткое описание агента"
             />
           </div>
 
           {/* Color */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Цвет
+            <label className="block text-sm font-semibold text-neutral-900 mb-3">
+              Цвет агента
             </label>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-3 flex-wrap">
               {colors.map((c) => (
                 <button
                   key={c.value}
+                  type="button"
                   onClick={() => setColor(c.value)}
-                  className={`w-12 h-12 ${c.value} rounded-lg border-2 transition-all ${
+                  className={`group relative w-14 h-14 ${c.value} rounded-xl border-3 transition-smooth hover:scale-110 focus-ring ${
                     color === c.value
-                      ? 'border-gray-900 scale-110'
-                      : 'border-transparent hover:scale-105'
+                      ? 'border-neutral-900 scale-110 shadow-lg'
+                      : 'border-transparent hover:shadow-md'
                   }`}
                   title={c.label}
-                />
+                  aria-label={c.label}
+                >
+                  {color === c.value && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full bg-white/90 flex items-center justify-center">
+                        <div className="w-2 h-2 rounded-full bg-neutral-900" />
+                      </div>
+                    </div>
+                  )}
+                </button>
               ))}
             </div>
           </div>
 
           {/* System Prompt */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="agent-prompt" className="block text-sm font-semibold text-neutral-900 mb-2">
               Системный промпт
             </label>
             <textarea
+              id="agent-prompt"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               rows={16}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+              className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-100 font-mono text-sm transition-smooth resize-none"
               placeholder="Системный промпт для агента..."
             />
-            <p className="mt-2 text-xs text-gray-500">
+            <p className="mt-2 text-xs text-neutral-600 flex items-start gap-1.5">
+              <span className="text-primary-500">ℹ️</span>
               Этот промпт определяет поведение агента при обработке запросов
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-neutral-200 bg-neutral-50">
           <button
+            type="button"
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
+            className="px-5 py-2.5 text-neutral-700 font-medium hover:bg-neutral-200 rounded-xl transition-smooth focus-ring"
             disabled={isSaving}
           >
             Отмена
           </button>
           <button
+            type="button"
             onClick={handleSave}
             disabled={isSaving || !name.trim() || !description.trim() || !prompt.trim()}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white font-medium rounded-xl hover:bg-primary-700 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-smooth focus-ring"
           >
             <Save className="w-4 h-4" />
-            {isSaving ? 'Сохранение...' : 'Сохранить'}
+            {isSaving ? 'Сохранение...' : 'Сохранить изменения'}
           </button>
         </div>
       </div>

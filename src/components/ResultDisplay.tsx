@@ -1,5 +1,5 @@
 import { QueryResponse } from '../types';
-import { User, Bot, ChevronDown, ChevronUp } from 'lucide-react';
+import { User, Bot, ChevronDown, ChevronUp, CheckCircle2, AlertCircle, RotateCw } from 'lucide-react';
 import Markdown from 'markdown-to-jsx';
 import { useState } from 'react';
 
@@ -11,36 +11,38 @@ export const ResultDisplay = ({ result }: ResultDisplayProps) => {
   const [showDetails, setShowDetails] = useState(false);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fadeIn">
       {/* User message */}
       <div className="flex items-start gap-4">
-        <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center flex-shrink-0 shadow-md">
           <User className="w-5 h-5 text-white" />
         </div>
-        <div className="flex-1 pt-1">
-          <p className="text-gray-900">{result.input}</p>
+        <div className="flex-1 pt-2">
+          <p className="text-neutral-900 text-base leading-relaxed">{result.input}</p>
         </div>
       </div>
 
       {/* Agent response */}
       <div className="flex items-start gap-4">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-md">
           <Bot className="w-5 h-5 text-white" />
         </div>
-        <div className="flex-1 pt-1">
-          <div className="prose prose-sm max-w-none text-gray-900">
+        <div className="flex-1 pt-2">
+          {/* Response content */}
+          <div className="prose prose-neutral max-w-none">
             <Markdown
               options={{
                 overrides: {
-                  h1: { props: { className: 'text-xl font-bold mt-4 mb-2' } },
-                  h2: { props: { className: 'text-lg font-bold mt-3 mb-2' } },
-                  h3: { props: { className: 'text-base font-bold mt-2 mb-1' } },
-                  p: { props: { className: 'mb-2' } },
-                  ul: { props: { className: 'list-disc list-inside mb-2 space-y-1' } },
-                  ol: { props: { className: 'list-decimal list-inside mb-2 space-y-1' } },
-                  code: { props: { className: 'bg-gray-100 px-1 py-0.5 rounded text-sm font-mono' } },
-                  pre: { props: { className: 'bg-gray-100 p-3 rounded-lg overflow-x-auto my-2' } },
-                  blockquote: { props: { className: 'border-l-4 border-gray-300 pl-4 italic my-2' } },
+                  h1: { props: { className: 'text-2xl font-bold text-neutral-900 mt-6 mb-3' } },
+                  h2: { props: { className: 'text-xl font-bold text-neutral-900 mt-5 mb-2.5' } },
+                  h3: { props: { className: 'text-lg font-semibold text-neutral-900 mt-4 mb-2' } },
+                  p: { props: { className: 'text-neutral-700 leading-relaxed mb-3' } },
+                  ul: { props: { className: 'list-disc list-outside ml-5 mb-3 space-y-1.5 text-neutral-700' } },
+                  ol: { props: { className: 'list-decimal list-outside ml-5 mb-3 space-y-1.5 text-neutral-700' } },
+                  code: { props: { className: 'bg-neutral-100 text-neutral-900 px-1.5 py-0.5 rounded text-sm font-mono' } },
+                  pre: { props: { className: 'bg-neutral-900 text-neutral-100 p-4 rounded-xl overflow-x-auto my-4 shadow-inner' } },
+                  blockquote: { props: { className: 'border-l-4 border-primary-500 pl-4 italic text-neutral-600 my-4' } },
+                  a: { props: { className: 'text-primary-600 hover:text-primary-700 underline decoration-primary-300 hover:decoration-primary-500 transition-colors' } },
                 },
               }}
             >
@@ -48,63 +50,90 @@ export const ResultDisplay = ({ result }: ResultDisplayProps) => {
             </Markdown>
           </div>
 
-          {/* Details toggle */}
+          {/* Details toggle button */}
           <button
             onClick={() => setShowDetails(!showDetails)}
-            className="mt-4 flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            className="mt-6 flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition-smooth px-3 py-2 rounded-lg hover:bg-neutral-100 focus-ring"
+            aria-expanded={showDetails}
           >
             {showDetails ? (
               <ChevronUp className="w-4 h-4" />
             ) : (
               <ChevronDown className="w-4 h-4" />
             )}
-            <span>
+            <span className="font-medium">
               {showDetails ? 'Скрыть детали' : 'Показать детали выполнения'}
             </span>
           </button>
 
           {/* Expanded details */}
           {showDetails && (
-            <div className="mt-4 space-y-4">
-              {/* Route info */}
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Маршрут:</span>
-                  <span className="text-sm text-gray-900 font-mono">{result.route}</span>
-                </div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Статус ревью:</span>
-                  <span className={`text-sm font-medium ${
-                    result.review_result === 'approved'
-                      ? 'text-green-600'
-                      : 'text-yellow-600'
-                  }`}>
-                    {result.review_result === 'approved' ? 'Одобрено' : 'Требует доработки'}
-                  </span>
-                </div>
-                {result.iteration_count > 0 && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Итераций:</span>
-                    <span className="text-sm text-gray-900">{result.iteration_count}</span>
+            <div className="mt-5 space-y-4 animate-slideUp">
+              {/* Route info card */}
+              <div className="card-elevated p-5">
+                <h4 className="text-sm font-semibold text-neutral-900 mb-4">Информация о выполнении</h4>
+
+                <div className="space-y-3">
+                  {/* Route */}
+                  <div className="flex items-center justify-between py-2 border-b border-neutral-100 last:border-0">
+                    <span className="text-sm font-medium text-neutral-600">Маршрут</span>
+                    <span className="text-sm text-neutral-900 font-mono bg-neutral-100 px-2 py-1 rounded">
+                      {result.route}
+                    </span>
                   </div>
-                )}
+
+                  {/* Review status */}
+                  <div className="flex items-center justify-between py-2 border-b border-neutral-100 last:border-0">
+                    <span className="text-sm font-medium text-neutral-600">Статус ревью</span>
+                    <span className={`flex items-center gap-1.5 text-sm font-medium px-2.5 py-1 rounded-full ${
+                      result.review_result === 'approved'
+                        ? 'bg-success-100 text-success-700'
+                        : 'bg-warning-100 text-warning-700'
+                    }`}>
+                      {result.review_result === 'approved' ? (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Одобрено
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          Требует доработки
+                        </>
+                      )}
+                    </span>
+                  </div>
+
+                  {/* Iterations */}
+                  {result.iteration_count > 0 && (
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-sm font-medium text-neutral-600">Итераций</span>
+                      <span className="flex items-center gap-1.5 text-sm font-medium text-neutral-900">
+                        <RotateCw className="w-3.5 h-3.5" />
+                        {result.iteration_count}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Execution log */}
               {result.log && result.log.length > 0 && (
-                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-3">Ход выполнения:</h4>
-                  <div className="space-y-3">
+                <div className="card-elevated p-5">
+                  <h4 className="text-sm font-semibold text-neutral-900 mb-4">Ход выполнения</h4>
+                  <div className="space-y-4">
                     {result.log.map((entry, index) => (
                       <div key={index} className="flex gap-3">
-                        <div className="flex flex-col items-center">
-                          <div className="w-2 h-2 rounded-full bg-blue-500 mt-2" />
+                        <div className="flex flex-col items-center pt-1">
+                          <div className="w-2.5 h-2.5 rounded-full bg-primary-500 ring-4 ring-primary-100" />
                           {index < result.log.length - 1 && (
-                            <div className="w-0.5 flex-1 bg-blue-200 my-1" style={{ minHeight: '20px' }} />
+                            <div className="w-0.5 flex-1 bg-primary-200 my-1.5" style={{ minHeight: '24px' }} />
                           )}
                         </div>
-                        <div className="flex-1 pb-2">
-                          <p className="text-sm text-gray-700 whitespace-pre-wrap">{entry}</p>
+                        <div className="flex-1 pb-1">
+                          <p className="text-sm text-neutral-700 leading-relaxed whitespace-pre-wrap">
+                            {entry}
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -114,9 +143,9 @@ export const ResultDisplay = ({ result }: ResultDisplayProps) => {
 
               {/* Raw context */}
               {result.context && (
-                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-2">Контекст выполнения:</h4>
-                  <pre className="text-xs text-gray-600 whitespace-pre-wrap font-mono overflow-x-auto">
+                <div className="card-elevated p-5">
+                  <h4 className="text-sm font-semibold text-neutral-900 mb-3">Контекст выполнения</h4>
+                  <pre className="text-xs text-neutral-600 whitespace-pre-wrap font-mono overflow-x-auto bg-neutral-50 p-4 rounded-lg">
                     {result.context}
                   </pre>
                 </div>
