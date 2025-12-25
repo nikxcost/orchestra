@@ -135,7 +135,7 @@ class AgentsStorage:
             "agent2": Agent(
                 id="agent2",
                 name="Агент требований",
-                description="Специалист по сбору и анализу тр��бований",
+                description="Специалист по сбору и анализу требований",
                 color="bg-green-500",
                 prompt="Вы специалист по сбору и анализу требований."
             ),
@@ -204,6 +204,13 @@ class AgentsStorage:
         """Возвращает словарь промптов для использования в orchestrator"""
         return {
             agent_id: agent.prompt
+            for agent_id, agent in self.agents.items()
+        }
+
+    def get_descriptions_dict(self) -> Dict[str, str]:
+        """Возвращает словарь описаний агентов для routing"""
+        return {
+            agent_id: f"{agent.name} - {agent.description}"
             for agent_id, agent in self.agents.items()
         }
 

@@ -56,18 +56,27 @@ def route_question(state: AgentState) -> AgentState:
 
     llm = get_llm()
 
+    # Динамически загружаем описания агентов из хранилища
+    storage = get_storage()
+    agents = storage.get_all()
+
+    # Формируем список агентов для промпта
+    agents_list = "\n".join([
+        f"- {agent['id']}: {agent['name']} - {agent['description']}"
+        for agent in agents
+    ])
+
+    # Формируем список ID агентов для валидации
+    valid_agent_ids = ", ".join([agent['id'] for agent in agents])
+
     routing_prompt = f"""Вы оркестратор-маршрутизатор. Проанализируйте запрос пользователя и определите,
 к какому из следующих агентов его направить:
 
-- agent1: Генерация уточняющих вопросов для стейкхолдеров (для уточнения требований, описаний задач, инициатив)
-- agent2: Сбор и анализ требований
-- agent3: Техническая документация
-- agent4: Моделирование процессов
-- agent5: Общий бизнес-анализ
+{agents_list}
 
 Запрос пользователя: {state["input"]}
 
-Ответьте только названием агента (agent1, agent2, agent3, agent4 или agent5) без дополнительных пояснений."""
+Ответьте только ID агента ({valid_agent_ids}) без дополнительных пояснений."""
 
     messages = [
         SystemMessage(content="Вы оркестратор-маршрутизатор запросов."),
@@ -78,15 +87,22 @@ def route_question(state: AgentState) -> AgentState:
     raw_route = response.content.strip()
     route = raw_route.lower()
 
-    if route not in MINI_AGENTS_PROMPTS:
-        route = "agent5"
+    # Валидация: проверяем, что выбранный агент существует
+    current_prompts = get_mini_agents_prompts()
+    if route not in current_prompts:
+        # Если агент не найден, выбираем первого доступного (fallback)
+        route = list(current_prompts.keys())[0] if current_prompts else "agent1"
+
+    # Находим информацию о выбранном агенте для логирования
+    selected_agent = next((a for a in agents if a['id'] == route), None)
+    agent_info = f"{selected_agent['name']} ({route})" if selected_agent else route
 
     state["route"] = route
     state["context"] = f"Запрос направлен к {route}"
     state["log"].append(
         "✅ Оркестратор: принял решение о маршрутизации\n"
         f"   Ответ LLM (сырое значение): {raw_route}\n"
-        f"   Выбранный агент: {route}"
+        f"   Выбранный агент: {agent_info}"
     )
 
     return state
