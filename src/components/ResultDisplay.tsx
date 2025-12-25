@@ -1,111 +1,130 @@
 import { QueryResponse } from '../types';
-import { AGENTS } from '../config/agents';
-import { CheckCircle2, RefreshCw, AlertCircle, ListChecks } from 'lucide-react';
+import { User, Bot, ChevronDown, ChevronUp } from 'lucide-react';
 import Markdown from 'markdown-to-jsx';
+import { useState } from 'react';
 
 interface ResultDisplayProps {
   result: QueryResponse;
 }
 
 export const ResultDisplay = ({ result }: ResultDisplayProps) => {
-  const selectedAgent = AGENTS.find((a) => a.id === result.route);
-
-  const getStepLabel = (entry: string) => {
-    if (entry.includes('Оркестратор')) return 'Оркестратор';
-    if (entry.includes('Агент')) return 'Агент';
-    if (entry.includes('Ревьюер')) return 'Ревьюер';
-    if (entry.includes('Финальный ответ') || entry.includes('🏁')) return 'Финальный ответ';
-    if (entry.includes('Итерация доработки')) return 'Доработка';
-    return 'Шаг';
-  };
+  const [showDetails, setShowDetails] = useState(false);
 
   return (
-    <div className="w-full max-w-4xl space-y-4 animate-fadeIn">
-      <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-        <div className="flex items-center gap-2 mb-4">
-          <div className={`w-3 h-3 rounded-full ${selectedAgent?.color || 'bg-gray-500'}`} />
-          <h3 className="text-lg font-semibold text-gray-900">
-            Выбран агент: {selectedAgent?.name || result.route}
-          </h3>
+    <div className="space-y-6">
+      {/* User message */}
+      <div className="flex items-start gap-4">
+        <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
+          <User className="w-5 h-5 text-white" />
         </div>
-
-        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-          <p className="text-sm font-medium text-gray-600 mb-1">Запрос:</p>
-          <p className="text-gray-800">{result.input}</p>
+        <div className="flex-1 pt-1">
+          <p className="text-gray-900">{result.input}</p>
         </div>
+      </div>
 
-        <div className="mb-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
-          <p className="text-sm font-medium text-blue-900 mb-2">Ответ агента:</p>
-          <div className="prose prose-sm max-w-none text-gray-800">
-            <Markdown>{result.agent_response}</Markdown>
+      {/* Agent response */}
+      <div className="flex items-start gap-4">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+          <Bot className="w-5 h-5 text-white" />
+        </div>
+        <div className="flex-1 pt-1">
+          <div className="prose prose-sm max-w-none text-gray-900">
+            <Markdown
+              options={{
+                overrides: {
+                  h1: { props: { className: 'text-xl font-bold mt-4 mb-2' } },
+                  h2: { props: { className: 'text-lg font-bold mt-3 mb-2' } },
+                  h3: { props: { className: 'text-base font-bold mt-2 mb-1' } },
+                  p: { props: { className: 'mb-2' } },
+                  ul: { props: { className: 'list-disc list-inside mb-2 space-y-1' } },
+                  ol: { props: { className: 'list-decimal list-inside mb-2 space-y-1' } },
+                  code: { props: { className: 'bg-gray-100 px-1 py-0.5 rounded text-sm font-mono' } },
+                  pre: { props: { className: 'bg-gray-100 p-3 rounded-lg overflow-x-auto my-2' } },
+                  blockquote: { props: { className: 'border-l-4 border-gray-300 pl-4 italic my-2' } },
+                },
+              }}
+            >
+              {result.agent_response}
+            </Markdown>
           </div>
-        </div>
 
-        <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            {result.review_result === 'approved' ? (
-              <>
-                <CheckCircle2 className="w-5 h-5 text-green-500" />
-                <span className="text-green-700 font-medium">Одобрено</span>
-              </>
+          {/* Details toggle */}
+          <button
+            onClick={() => setShowDetails(!showDetails)}
+            className="mt-4 flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            {showDetails ? (
+              <ChevronUp className="w-4 h-4" />
             ) : (
-              <>
-                <AlertCircle className="w-5 h-5 text-yellow-500" />
-                <span className="text-yellow-700 font-medium">Требуется доработка</span>
-              </>
+              <ChevronDown className="w-4 h-4" />
             )}
-          </div>
+            <span>
+              {showDetails ? 'Скрыть детали' : 'Показать детали выполнения'}
+            </span>
+          </button>
 
-          {result.iteration_count > 0 && (
-            <div className="flex items-center gap-2">
-              <RefreshCw className="w-4 h-4 text-gray-500" />
-              <span className="text-gray-600">
-                Итераций: {result.iteration_count}
-              </span>
+          {/* Expanded details */}
+          {showDetails && (
+            <div className="mt-4 space-y-4">
+              {/* Route info */}
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Маршрут:</span>
+                  <span className="text-sm text-gray-900 font-mono">{result.route}</span>
+                </div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Статус ревью:</span>
+                  <span className={`text-sm font-medium ${
+                    result.review_result === 'approved'
+                      ? 'text-green-600'
+                      : 'text-yellow-600'
+                  }`}>
+                    {result.review_result === 'approved' ? 'Одобрено' : 'Требует доработки'}
+                  </span>
+                </div>
+                {result.iteration_count > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Итераций:</span>
+                    <span className="text-sm text-gray-900">{result.iteration_count}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Execution log */}
+              {result.log && result.log.length > 0 && (
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <h4 className="text-sm font-semibold text-gray-900 mb-3">Ход выполнения:</h4>
+                  <div className="space-y-3">
+                    {result.log.map((entry, index) => (
+                      <div key={index} className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className="w-2 h-2 rounded-full bg-blue-500 mt-2" />
+                          {index < result.log.length - 1 && (
+                            <div className="w-0.5 flex-1 bg-blue-200 my-1" style={{ minHeight: '20px' }} />
+                          )}
+                        </div>
+                        <div className="flex-1 pb-2">
+                          <p className="text-sm text-gray-700 whitespace-pre-wrap">{entry}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Raw context */}
+              {result.context && (
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <h4 className="text-sm font-semibold text-gray-900 mb-2">Контекст выполнения:</h4>
+                  <pre className="text-xs text-gray-600 whitespace-pre-wrap font-mono overflow-x-auto">
+                    {result.context}
+                  </pre>
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
-
-      {/* Таймлайн / лог выполнения пайплайна */}
-      {(result.log && result.log.length > 0) && (
-        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-          <div className="flex items-center gap-2 mb-3">
-            <ListChecks className="w-5 h-5 text-gray-700" />
-            <h4 className="font-semibold text-gray-800">Ход выполнения запроса (фактический таймлайн)</h4>
-          </div>
-          <ol className="space-y-3 text-sm text-gray-700">
-            {result.log.map((entry, index) => (
-              <li key={index} className="flex gap-3 items-start">
-                <div className="flex flex-col items-center mt-0.5">
-                  <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  {index < result.log.length - 1 && (
-                    <div className="w-px flex-1 bg-blue-200 mt-1" />
-                  )}
-                </div>
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-wide text-blue-700 mb-1">
-                    {getStepLabel(entry)}
-                  </div>
-                  <div className="whitespace-pre-wrap">{entry}</div>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
-
-      {/* Старый текстовый контекст оставляем как резервный источник информации */}
-      {result.context && (
-        <details className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-          <summary className="cursor-pointer font-medium text-gray-700 hover:text-gray-900">
-            Контекст выполнения (сырой)
-          </summary>
-          <pre className="mt-3 text-sm text-gray-600 whitespace-pre-wrap font-mono">
-            {result.context}
-          </pre>
-        </details>
-      )}
     </div>
   );
 };

@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from orchestrator import process_query
+from agents_storage import get_storage
 import traceback
 from typing import List
 
@@ -31,6 +32,13 @@ class QueryResponse(BaseModel):
     log: List[str]
 
 
+class AgentUpdate(BaseModel):
+    name: str
+    description: str
+    prompt: str
+    color: str
+
+
 @app.get("/")
 async def root():
     return {
@@ -45,6 +53,44 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+
+@app.get("/agents")
+async def get_agents():
+    """Получить список всех агентов"""
+    storage = get_storage()
+    return storage.get_all()
+
+
+@app.get("/agents/{agent_id}")
+async def get_agent(agent_id: str):
+    """Получить агента по ID"""
+    storage = get_storage()
+    agent = storage.get_by_id(agent_id)
+    if not agent:
+        raise HTTPException(status_code=404, detail=f"Агент {agent_id} не найден")
+    return agent
+
+
+@app.put("/agents/{agent_id}")
+async def update_agent(agent_id: str, agent_update: AgentUpdate):
+    """Обновить агента"""
+    try:
+        storage = get_storage()
+        updated_agent = storage.update(
+            agent_id=agent_id,
+            name=agent_update.name,
+            description=agent_update.description,
+            prompt=agent_update.prompt,
+            color=agent_update.color
+        )
+        return updated_agent
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        print(f"Error updating agent: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Ошибка обновления агента: {str(e)}")
 
 
 @app.post("/query", response_model=QueryResponse)
