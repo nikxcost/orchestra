@@ -1,7 +1,15 @@
 fastapi==0.109.0
 uvicorn==0.27.0
+slowapi==0.1.9
+loguru==0.7.2
 
 # Backend использует LangChain / LangGraph, которые уже установлены в системе.
 # Чтобы избежать тяжёлого конфликта и долгого бэктрекинга pip, НЕ фиксируем их здесь.
 
 python-dotenv==1.0.0
+
+# Development dependencies
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+httpx==0.25.2

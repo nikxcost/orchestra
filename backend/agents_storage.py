@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from typing import Dict, List, Optional
 from datetime import datetime
+from loguru import logger
 
 
 class Agent:
@@ -63,12 +64,12 @@ class AgentsStorage:
                         agent_id: Agent.from_dict(agent_data)
                         for agent_id, agent_data in data.items()
                     }
-                print(f"✅ Загружено {len(self.agents)} агентов из {self.file_path}")
+                logger.info(f"Loaded {len(self.agents)} agents from {self.file_path}")
             except Exception as e:
-                print(f"⚠️ Ошибка загрузки агентов: {e}. Используем дефолтную конфигурацию.")
+                logger.warning(f"Error loading agents: {e}. Using default configuration.")
                 self._create_default_agents()
         else:
-            print(f"📝 Файл {self.file_path} не найден. Создаём дефолтную конфигурацию.")
+            logger.info(f"File {self.file_path} not found. Creating default configuration.")
             self._create_default_agents()
             self._save()
 
@@ -171,9 +172,9 @@ class AgentsStorage:
             }
             with open(self.file_path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
-            print(f"✅ Сохранено {len(self.agents)} агентов в {self.file_path}")
+            logger.debug(f"Saved {len(self.agents)} agents to {self.file_path}")
         except Exception as e:
-            print(f"❌ Ошибка сохранения агентов: {e}")
+            logger.error(f"Error saving agents: {e}")
             raise
 
     def get_all(self) -> List[dict]:
