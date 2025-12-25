@@ -274,7 +274,20 @@ function App() {
         {/* Input area */}
         <div className="border-t border-gray-200 bg-white">
           <div className="max-w-3xl mx-auto px-4 py-4">
-            <QueryForm onSubmit={handleQuery} isLoading={isLoading} />
+            {result ? (
+              // Показываем кнопку "Новый чат" после получения результата
+              <button
+                onClick={handleNewChat}
+                className="w-full px-4 py-3 bg-gray-900 text-white text-base font-medium rounded-xl hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
+                style={{ minHeight: '52px' }}
+              >
+                <Plus className="w-5 h-5" />
+                Новый чат
+              </button>
+            ) : (
+              // Показываем форму ввода, если нет результата
+              <QueryForm onSubmit={handleQuery} isLoading={isLoading} />
+            )}
           </div>
         </div>
       </div>
