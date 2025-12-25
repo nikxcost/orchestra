@@ -32,7 +32,9 @@ def mock_env_vars(monkeypatch):
 def test_client(mock_env_vars):
     """Создаёт тестовый клиент для FastAPI"""
     from main import app
-    return TestClient(app)
+    from httpx import ASGITransport
+    from fastapi.testclient import TestClient as FastAPITestClient
+    return FastAPITestClient(app)
 
 
 @pytest.fixture
