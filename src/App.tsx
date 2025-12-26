@@ -12,13 +12,19 @@ import { queryOrchestrator, checkHealth, getAgents, getAgent, updateAgent } from
 import type { QueryResponse, QueryHistoryItem, Agent } from './types';
 import { MessageSquare, Plus, Menu, X } from 'lucide-react';
 
+// Check if device is mobile (< 768px)
+const getInitialSidebarState = () => {
+  if (typeof window === 'undefined') return true;
+  return window.innerWidth >= 768;
+};
+
 function App() {
   const [result, setResult] = useState<QueryResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [history, setHistory] = useState<QueryHistoryItem[]>([]);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(getInitialSidebarState);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [agentToEdit, setAgentToEdit] = useState<(Agent & { prompt: string }) | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
