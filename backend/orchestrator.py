@@ -1,12 +1,28 @@
 import os
+from pathlib import Path
 from typing import TypedDict, Literal, Optional, List
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.graph import StateGraph, END
 from dotenv import load_dotenv
 from agents_storage import get_storage
+from loguru import logger
 
-load_dotenv()
+# Явно указываем путь к .env файлу (работает и при запуске через systemd)
+env_path = Path(__file__).parent / ".env"
+load_dotenv(dotenv_path=env_path)
+
+# Проверяем что ключевые переменные загружены
+_openrouter_key = os.getenv("OPENROUTER_API_KEY")
+_model_name = os.getenv("MODEL_NAME", "openai/gpt-4o")
+
+if not _openrouter_key:
+    logger.error(f"❌ OPENROUTER_API_KEY not found! Checked .env at: {env_path}")
+    logger.error(f"   Current working directory: {os.getcwd()}")
+    logger.error(f"   .env file exists: {env_path.exists()}")
+else:
+    logger.info(f"✅ OpenRouter API key loaded (first 20 chars): {_openrouter_key[:20]}...")
+    logger.info(f"✅ Model: {_model_name}")
 
 
 class AgentState(TypedDict):

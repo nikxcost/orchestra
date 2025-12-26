@@ -184,10 +184,10 @@ async def update_agent(agent_id: str, agent_update: AgentUpdate):
 
 @app.post("/query", response_model=QueryResponse, dependencies=[Depends(verify_api_key)])
 @limiter.limit("10/minute")
-async def query_orchestrator(request: QueryRequest):
-    logger.info(f"Processing query: {request.query[:100]}...")
+async def query_orchestrator(request: Request, query_request: QueryRequest):
+    logger.info(f"Processing query: {query_request.query[:100]}...")
     try:
-        result = await process_query(request.query)
+        result = await process_query(query_request.query)
 
         logger.info(f"Query processed successfully. Route: {result.get('route')}, Iterations: {result.get('iteration_count')}")
 
@@ -202,11 +202,13 @@ async def query_orchestrator(request: QueryRequest):
         )
 
     except Exception as e:
-        logger.error(f"Error processing query: {str(e)}")
-        logger.debug(traceback.format_exc())
+        error_msg = str(e)
+        full_traceback = traceback.format_exc()
+        logger.error(f"Error processing query: {error_msg}")
+        logger.error(f"Full traceback:\n{full_traceback}")
         raise HTTPException(
             status_code=500,
-            detail=f"Error processing query: {str(e)}"
+            detail=f"Error processing query: {error_msg}"
         )
 
 
