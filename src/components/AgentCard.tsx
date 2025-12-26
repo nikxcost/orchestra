@@ -16,7 +16,7 @@ export const AgentCard = ({ agent, isActive, onEdit }: AgentCardProps) => {
 
   return (
     <div
-      className={`group relative p-5 rounded-xl border transition-smooth hover-lift min-h-[160px] flex flex-col ${
+      className={`group relative p-5 rounded-xl border transition-smooth hover-lift min-h-[180px] flex flex-col ${
         isActive
           ? `border-primary-300 dark:border-primary-700 ${colorScheme.bgLight} shadow-md`
           : 'border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-600 hover:shadow-md'
@@ -43,7 +43,7 @@ export const AgentCard = ({ agent, isActive, onEdit }: AgentCardProps) => {
         <h3 className="font-semibold text-neutral-900 dark:text-white mb-1.5 text-sm leading-tight">
           {agent.name}
         </h3>
-        <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed line-clamp-3">
+        <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed line-clamp-4">
           {agent.description}
         </p>
       </div>
