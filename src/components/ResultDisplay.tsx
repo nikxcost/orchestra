@@ -1,6 +1,7 @@
 import { QueryResponse } from '../types';
 import { User, Bot, ChevronDown, ChevronUp, CheckCircle2, AlertCircle, RotateCw } from 'lucide-react';
-import Markdown from 'markdown-to-jsx';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useState } from 'react';
 
 interface ResultDisplayProps {
@@ -30,24 +31,36 @@ export const ResultDisplay = ({ result }: ResultDisplayProps) => {
         <div className="flex-1 pt-2">
           {/* Response content */}
           <div className="prose prose-neutral max-w-none">
-            <Markdown
-              options={{
-                overrides: {
-                  h1: { props: { className: 'text-2xl font-bold text-neutral-900 mt-6 mb-3' } },
-                  h2: { props: { className: 'text-xl font-bold text-neutral-900 mt-5 mb-2.5' } },
-                  h3: { props: { className: 'text-lg font-semibold text-neutral-900 mt-4 mb-2' } },
-                  p: { props: { className: 'text-neutral-700 leading-relaxed mb-3' } },
-                  ul: { props: { className: 'list-disc list-outside ml-5 mb-3 space-y-1.5 text-neutral-700' } },
-                  ol: { props: { className: 'list-decimal list-outside ml-5 mb-3 space-y-1.5 text-neutral-700' } },
-                  code: { props: { className: 'bg-neutral-100 text-neutral-900 px-1.5 py-0.5 rounded text-sm font-mono' } },
-                  pre: { props: { className: 'bg-neutral-900 text-neutral-100 p-4 rounded-xl overflow-x-auto my-4 shadow-inner' } },
-                  blockquote: { props: { className: 'border-l-4 border-primary-500 pl-4 italic text-neutral-600 my-4' } },
-                  a: { props: { className: 'text-primary-600 hover:text-primary-700 underline decoration-primary-300 hover:decoration-primary-500 transition-colors' } },
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                h1: ({ children }) => <h1 className="text-2xl font-bold text-neutral-900 mt-6 mb-3">{children}</h1>,
+                h2: ({ children }) => <h2 className="text-xl font-bold text-neutral-900 mt-5 mb-2.5">{children}</h2>,
+                h3: ({ children }) => <h3 className="text-lg font-semibold text-neutral-900 mt-4 mb-2">{children}</h3>,
+                p: ({ children }) => <p className="text-neutral-700 leading-relaxed mb-3">{children}</p>,
+                ul: ({ children }) => <ul className="list-disc list-outside ml-5 mb-3 space-y-1.5 text-neutral-700">{children}</ul>,
+                ol: ({ children }) => <ol className="list-decimal list-outside ml-5 mb-3 space-y-1.5 text-neutral-700">{children}</ol>,
+                code: ({ children, className }) => {
+                  // Check if this is inline code or a code block
+                  const isInline = !className;
+                  if (isInline) {
+                    return <code className="bg-neutral-100 text-neutral-900 px-1.5 py-0.5 rounded text-sm font-mono">{children}</code>;
+                  }
+                  return <code className={className}>{children}</code>;
                 },
+                pre: ({ children }) => <pre className="bg-neutral-900 text-neutral-100 p-4 rounded-xl overflow-x-auto my-4 shadow-inner">{children}</pre>,
+                blockquote: ({ children }) => <blockquote className="border-l-4 border-primary-500 pl-4 italic text-neutral-600 my-4">{children}</blockquote>,
+                a: ({ href, children }) => <a href={href} className="text-primary-600 hover:text-primary-700 underline decoration-primary-300 hover:decoration-primary-500 transition-colors">{children}</a>,
+                table: ({ children }) => <table className="w-full border-collapse my-4 text-sm">{children}</table>,
+                thead: ({ children }) => <thead className="bg-neutral-100">{children}</thead>,
+                tbody: ({ children }) => <tbody className="divide-y divide-neutral-200">{children}</tbody>,
+                tr: ({ children }) => <tr className="border-b border-neutral-200 hover:bg-neutral-50 transition-colors">{children}</tr>,
+                th: ({ children }) => <th className="px-4 py-3 text-left font-semibold text-neutral-900 border border-neutral-200 bg-neutral-100">{children}</th>,
+                td: ({ children }) => <td className="px-4 py-3 text-neutral-700 border border-neutral-200 align-top">{children}</td>,
               }}
             >
               {result.agent_response}
-            </Markdown>
+            </ReactMarkdown>
           </div>
 
           {/* Details toggle button */}
