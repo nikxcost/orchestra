@@ -260,12 +260,18 @@ function AppContent() {
               <Menu className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
             )}
           </button>
-          <h1 className="text-xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
-            Orchestra
-          </h1>
-          <span className="text-sm text-neutral-500 dark:text-neutral-400 font-medium hidden sm:inline">
-            Оркестратор агентов
-          </span>
+          <button
+            onClick={handleNewChat}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity group focus-ring rounded-lg px-2 py-1 -ml-2"
+            aria-label="Перейти на главную страницу"
+          >
+            <h1 className="text-xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
+              Orchestra
+            </h1>
+            <span className="text-sm text-neutral-500 dark:text-neutral-400 font-medium hidden sm:inline group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
+              Оркестратор агентов
+            </span>
+          </button>
           <div className="ml-auto">
             <ThemeToggle />
           </div>
