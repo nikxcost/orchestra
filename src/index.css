@@ -28,6 +28,15 @@
   background-color: rgba(82, 82, 82, 0.5);
 }
 
+/* Dark mode scrollbar */
+.dark *::-webkit-scrollbar-thumb {
+  background-color: rgba(150, 150, 150, 0.3);
+}
+
+.dark *::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(180, 180, 180, 0.4);
+}
+
 /* Base layer - minimal global styles */
 @layer base {
   html {
@@ -35,8 +44,14 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Light theme (default) */
   body {
     @apply bg-white text-neutral-900;
+  }
+
+  /* Dark theme */
+  .dark body {
+    @apply bg-neutral-950 text-neutral-100;
   }
 }
 
@@ -54,6 +69,10 @@
     @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2;
   }
 
+  .dark .focus-ring {
+    @apply focus-visible:ring-offset-neutral-900;
+  }
+
   /* Glassmorphism effect */
   .glass {
     background: rgba(255, 255, 255, 0.8);
@@ -61,9 +80,17 @@
     -webkit-backdrop-filter: blur(12px);
   }
 
+  .dark .glass {
+    background: rgba(23, 23, 23, 0.8);
+  }
+
   /* Elevated card effect */
   .card-elevated {
     @apply bg-white rounded-xl shadow-lg border border-neutral-100;
+  }
+
+  .dark .card-elevated {
+    @apply bg-neutral-900 border-neutral-800;
   }
 
   /* Hover lift effect */

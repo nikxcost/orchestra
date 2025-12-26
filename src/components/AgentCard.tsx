@@ -15,14 +15,14 @@ export const AgentCard = ({ agent, isActive, onEdit }: AgentCardProps) => {
     <div
       className={`group relative p-5 rounded-xl border transition-smooth hover-lift ${
         isActive
-          ? `border-primary-300 ${colorScheme.bgLight} shadow-md`
-          : 'border-neutral-200 bg-white hover:border-neutral-300 hover:shadow-md'
+          ? `border-primary-300 dark:border-primary-700 ${colorScheme.bgLight} shadow-md`
+          : 'border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-600 hover:shadow-md'
       }`}
     >
       {onEdit && (
         <button
           onClick={() => onEdit(agent)}
-          className="absolute top-3 right-3 p-1.5 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-lg transition-smooth opacity-0 group-hover:opacity-100 focus-ring"
+          className="absolute top-3 right-3 p-1.5 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-smooth opacity-0 group-hover:opacity-100 focus-ring"
           title="Редактировать агента"
           aria-label="Редактировать агента"
         >
@@ -36,10 +36,10 @@ export const AgentCard = ({ agent, isActive, onEdit }: AgentCardProps) => {
       </div>
 
       {/* Agent info */}
-      <h3 className="font-semibold text-neutral-900 mb-1.5 text-sm leading-tight">
+      <h3 className="font-semibold text-neutral-900 dark:text-white mb-1.5 text-sm leading-tight">
         {agent.name}
       </h3>
-      <p className="text-xs text-neutral-600 leading-relaxed line-clamp-2">
+      <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed line-clamp-2">
         {agent.description}
       </p>
 

@@ -33,9 +33,9 @@ export const QueryForm = ({ onSubmit, isLoading }: QueryFormProps) => {
       <div
         className={`relative rounded-2xl border-2 transition-smooth ${
           isFocused
-            ? 'border-primary-500 shadow-lg shadow-primary-100'
-            : 'border-neutral-200 hover:border-neutral-300'
-        } ${isLoading ? 'bg-neutral-50' : 'bg-white'}`}
+            ? 'border-primary-500 shadow-lg shadow-primary-100 dark:shadow-primary-900/30'
+            : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600'
+        } ${isLoading ? 'bg-neutral-50 dark:bg-neutral-800' : 'bg-white dark:bg-neutral-800'}`}
       >
         <textarea
           value={query}
@@ -47,7 +47,7 @@ export const QueryForm = ({ onSubmit, isLoading }: QueryFormProps) => {
           disabled={isLoading}
           rows={1}
           aria-label="Введите ваш запрос"
-          className="w-full px-5 py-4 pr-14 bg-transparent resize-none focus:outline-none disabled:text-neutral-400 text-neutral-900 placeholder:text-neutral-400"
+          className="w-full px-5 py-4 pr-14 bg-transparent resize-none focus:outline-none disabled:text-neutral-400 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
           style={{
             minHeight: '56px',
             maxHeight: '200px',
@@ -67,7 +67,7 @@ export const QueryForm = ({ onSubmit, isLoading }: QueryFormProps) => {
           className={`absolute right-2 bottom-2 p-2.5 rounded-xl transition-smooth focus-ring ${
             query.trim() && !isLoading
               ? 'bg-primary-600 text-white hover:bg-primary-700 hover:scale-105 shadow-md'
-              : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
+              : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-400 cursor-not-allowed'
           }`}
         >
           <ArrowUp className="w-5 h-5" />
@@ -76,11 +76,11 @@ export const QueryForm = ({ onSubmit, isLoading }: QueryFormProps) => {
 
       {/* Helper text */}
       <div className="flex items-center justify-between mt-2 px-1">
-        <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+        <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
           <Sparkles className="w-3.5 h-3.5" />
           <span>Shift + Enter для новой строки</span>
         </div>
-        <span className="text-xs text-neutral-400">
+        <span className="text-xs text-neutral-400 dark:text-neutral-500">
           {query.length > 0 && `${query.length} символов`}
         </span>
       </div>

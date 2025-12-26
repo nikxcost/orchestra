@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { QueryForm } from './components/QueryForm';
 import { ResultDisplay } from './components/ResultDisplay';
 import { AgentCard } from './components/AgentCard';
 import { AgentEditModal } from './components/AgentEditModal';
 import { ToastProvider } from './components/Toast';
 import { ResponseSkeleton } from './components/Skeleton';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeToggle } from './components/ThemeToggle';
+import { SearchInput } from './components/SearchInput';
 import { queryOrchestrator, checkHealth, getAgents, getAgent, updateAgent } from './services/api';
 import type { QueryResponse, QueryHistoryItem, Agent } from './types';
 import { MessageSquare, Plus, Menu, X } from 'lucide-react';
@@ -18,6 +21,18 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [agentToEdit, setAgentToEdit] = useState<(Agent & { prompt: string }) | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter history based on search query
+  const filteredHistory = useMemo(() => {
+    if (!searchQuery.trim()) return history;
+    const query = searchQuery.toLowerCase();
+    return history.filter(
+      (item) =>
+        item.request.toLowerCase().includes(query) ||
+        item.response.agent_response.toLowerCase().includes(query)
+    );
+  }, [history, searchQuery]);
 
   useEffect(() => {
     checkHealth()
@@ -119,15 +134,16 @@ function App() {
   };
 
   return (
+    <ThemeProvider>
     <ToastProvider>
-    <div className="flex h-screen bg-neutral-50 text-neutral-900">
+    <div className="flex h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100">
       {/* Sidebar */}
       <aside
         className={`${
           isSidebarOpen ? 'w-72' : 'w-0'
         } bg-neutral-900 text-white transition-all duration-300 ease-in-out overflow-hidden flex flex-col shadow-2xl`}
       >
-        <div className="p-4 border-b border-neutral-800">
+        <div className="p-4 border-b border-neutral-800 space-y-3">
           <button
             onClick={handleNewChat}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 hover:border-neutral-600 transition-smooth focus-ring"
@@ -135,12 +151,19 @@ function App() {
             <Plus className="w-5 h-5" />
             <span className="text-sm font-semibold">Новый чат</span>
           </button>
+          {history.length > 0 && (
+            <SearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Поиск в истории..."
+            />
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto p-3">
-          {history.length > 0 ? (
+          {filteredHistory.length > 0 ? (
             <div className="space-y-1.5">
-              {history.map((item) => (
+              {filteredHistory.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => handleHistoryClick(item)}
@@ -168,7 +191,7 @@ function App() {
             <div className="text-center mt-12 px-4">
               <MessageSquare className="w-10 h-10 mx-auto mb-3 text-neutral-700" />
               <p className="text-sm text-neutral-500">
-                История пуста
+                {searchQuery ? 'Ничего не найдено' : 'История пуста'}
               </p>
             </div>
           )}
@@ -191,30 +214,33 @@ function App() {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col bg-white">
+      <div className="flex-1 flex flex-col bg-white dark:bg-neutral-900">
         {/* Header */}
-        <header className="border-b border-neutral-200 bg-white/80 backdrop-blur-md px-6 py-4 flex items-center gap-4 sticky top-0 z-10">
+        <header className="border-b border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md px-6 py-4 flex items-center gap-4 sticky top-0 z-10">
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2.5 hover:bg-neutral-100 rounded-xl transition-smooth focus-ring"
+            className="p-2.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-smooth focus-ring"
             aria-label={isSidebarOpen ? 'Закрыть сайдбар' : 'Открыть сайдбар'}
           >
             {isSidebarOpen ? (
-              <X className="w-5 h-5 text-neutral-600" />
+              <X className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
             ) : (
-              <Menu className="w-5 h-5 text-neutral-600" />
+              <Menu className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
             )}
           </button>
-          <h1 className="text-xl font-bold text-neutral-900 bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
             Orchestra
           </h1>
-          <span className="text-sm text-neutral-500 font-medium">
+          <span className="text-sm text-neutral-500 dark:text-neutral-400 font-medium hidden sm:inline">
             Оркестратор агентов
           </span>
+          <div className="ml-auto">
+            <ThemeToggle />
+          </div>
         </header>
 
         {/* Chat area */}
-        <main className="flex-1 overflow-y-auto bg-gradient-to-b from-neutral-50 to-white">
+        <main className="flex-1 overflow-y-auto bg-gradient-to-b from-neutral-50 to-white dark:from-neutral-900 dark:to-neutral-900">
           {!result && !isLoading && !error ? (
             // Welcome screen
             <div className="h-full flex items-start justify-center px-4 pt-20 pb-12 overflow-y-auto">
@@ -223,10 +249,10 @@ function App() {
                   <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 mb-6 shadow-xl">
                     <MessageSquare className="w-10 h-10 text-white" />
                   </div>
-                  <h2 className="text-4xl font-bold text-neutral-900 mb-3">
+                  <h2 className="text-4xl font-bold text-neutral-900 dark:text-white mb-3">
                     Система оркестрации агентов
                   </h2>
-                  <p className="text-lg text-neutral-600 max-w-2xl mx-auto leading-relaxed">
+                  <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed">
                     Интеллектуальная маршрутизация запросов к специализированным AI-агентам
                   </p>
                 </div>
@@ -234,11 +260,11 @@ function App() {
                 {/* Agent cards */}
                 <div className="mb-8">
                   <div className="flex items-center justify-center gap-2 mb-6">
-                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
-                    <h3 className="text-sm font-bold text-neutral-700 uppercase tracking-wider px-4">
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent" />
+                    <h3 className="text-sm font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider px-4">
                       Доступные агенты
                     </h3>
-                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent" />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     {agents.map((agent) => (
@@ -279,13 +305,13 @@ function App() {
         </main>
 
         {/* Input area */}
-        <div className="border-t border-neutral-200 bg-white shadow-2xl">
+        <div className="border-t border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xl">
           <div className="max-w-4xl mx-auto px-6 py-5">
             {result ? (
               // Показываем кнопку "Новый чат" после получения результата
               <button
                 onClick={handleNewChat}
-                className="w-full px-6 py-4 bg-neutral-900 text-white text-base font-semibold rounded-2xl hover:bg-neutral-700 hover:shadow-lg transition-smooth flex items-center justify-center gap-2.5 focus-ring"
+                className="w-full px-6 py-4 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-base font-semibold rounded-2xl hover:bg-neutral-700 dark:hover:bg-neutral-100 hover:shadow-lg transition-smooth flex items-center justify-center gap-2.5 focus-ring"
                 style={{ minHeight: '60px' }}
               >
                 <Plus className="w-5 h-5" />
@@ -310,6 +336,7 @@ function App() {
       )}
     </div>
     </ToastProvider>
+    </ThemeProvider>
   );
 }
 
