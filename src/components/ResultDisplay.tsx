@@ -3,6 +3,7 @@ import { User, Bot, ChevronDown, ChevronUp, CheckCircle2, AlertCircle, RotateCw 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useState } from 'react';
+import { CodeBlock } from './CodeBlock';
 
 interface ResultDisplayProps {
   result: QueryResponse;
@@ -48,7 +49,7 @@ export const ResultDisplay = ({ result }: ResultDisplayProps) => {
                   }
                   return <code className={className}>{children}</code>;
                 },
-                pre: ({ children }) => <pre className="bg-neutral-900 text-neutral-100 p-4 rounded-xl overflow-x-auto my-4 shadow-inner">{children}</pre>,
+                pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
                 blockquote: ({ children }) => <blockquote className="border-l-4 border-primary-500 pl-4 italic text-neutral-600 my-4">{children}</blockquote>,
                 a: ({ href, children }) => <a href={href} className="text-primary-600 hover:text-primary-700 underline decoration-primary-300 hover:decoration-primary-500 transition-colors">{children}</a>,
                 table: ({ children }) => <table className="w-full border-collapse my-4 text-sm">{children}</table>,

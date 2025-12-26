@@ -3,6 +3,8 @@ import { QueryForm } from './components/QueryForm';
 import { ResultDisplay } from './components/ResultDisplay';
 import { AgentCard } from './components/AgentCard';
 import { AgentEditModal } from './components/AgentEditModal';
+import { ToastProvider } from './components/Toast';
+import { ResponseSkeleton } from './components/Skeleton';
 import { queryOrchestrator, checkHealth, getAgents, getAgent, updateAgent } from './services/api';
 import type { QueryResponse, QueryHistoryItem, Agent } from './types';
 import { MessageSquare, Plus, Menu, X } from 'lucide-react';
@@ -117,6 +119,7 @@ function App() {
   };
 
   return (
+    <ToastProvider>
     <div className="flex h-screen bg-neutral-50 text-neutral-900">
       {/* Sidebar */}
       <aside
@@ -265,17 +268,8 @@ function App() {
               )}
 
               {isLoading && (
-                <div className="mb-8 flex items-start gap-4 animate-fadeIn">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-md">
-                    <MessageSquare className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="flex-1 pt-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-2.5 h-2.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-2.5 h-2.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
-                  </div>
+                <div className="mb-8">
+                  <ResponseSkeleton />
                 </div>
               )}
 
@@ -315,6 +309,7 @@ function App() {
         />
       )}
     </div>
+    </ToastProvider>
   );
 }
 
