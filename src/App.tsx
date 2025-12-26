@@ -3,14 +3,16 @@ import { QueryForm } from './components/QueryForm';
 import { ResultDisplay } from './components/ResultDisplay';
 import { AgentCard } from './components/AgentCard';
 import { AgentEditModal } from './components/AgentEditModal';
-import { ToastProvider } from './components/Toast';
+import { ToastProvider, useToast } from './components/Toast';
 import { ResponseSkeleton } from './components/Skeleton';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ThemeToggle } from './components/ThemeToggle';
 import { SearchInput } from './components/SearchInput';
 import { queryOrchestrator, checkHealth, getAgents, getAgent, updateAgent } from './services/api';
 import type { QueryResponse, QueryHistoryItem, Agent } from './types';
-import { MessageSquare, Plus, Menu, X } from 'lucide-react';
+import { MessageSquare, Plus, Menu, X, Trash2 } from 'lucide-react';
+
+const MAX_HISTORY_ITEMS = 50;
 
 // Check if device is mobile (< 768px)
 const getInitialSidebarState = () => {
@@ -18,7 +20,8 @@ const getInitialSidebarState = () => {
   return window.innerWidth >= 768;
 };
 
-function App() {
+function AppContent() {
+  const { showToast } = useToast();
   const [result, setResult] = useState<QueryResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +82,8 @@ function App() {
         request: query,
         response,
       };
-      const nextHistory = [newItem, ...history];
+      // Лимит на 50 записей
+      const nextHistory = [newItem, ...history].slice(0, MAX_HISTORY_ITEMS);
       setHistory(nextHistory);
       try {
         window.localStorage.setItem('orchestrator_history_v1', JSON.stringify(nextHistory));
@@ -102,6 +106,19 @@ function App() {
   const handleHistoryClick = (item: QueryHistoryItem) => {
     setResult(item.response);
     setError(null);
+  };
+
+  const handleDeleteChat = (e: React.MouseEvent, itemId: string) => {
+    e.stopPropagation(); // Не открывать чат при клике на удаление
+
+    try {
+      const nextHistory = history.filter((item) => item.id !== itemId);
+      setHistory(nextHistory);
+      window.localStorage.setItem('orchestrator_history_v1', JSON.stringify(nextHistory));
+      showToast('Чат удалён', 'success');
+    } catch {
+      showToast('Не удалось удалить чат', 'error');
+    }
   };
 
   const handleEditAgent = async (agent: Agent) => {
@@ -140,8 +157,6 @@ function App() {
   };
 
   return (
-    <ThemeProvider>
-    <ToastProvider>
     <div className="flex h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100">
       {/* Sidebar */}
       <aside
@@ -170,27 +185,38 @@ function App() {
           {filteredHistory.length > 0 ? (
             <div className="space-y-1.5">
               {filteredHistory.map((item) => (
-                <button
+                <div
                   key={item.id}
-                  onClick={() => handleHistoryClick(item)}
-                  className="w-full text-left px-3 py-3 rounded-xl hover:bg-neutral-800 transition-smooth group"
+                  className="group relative"
                 >
-                  <div className="flex items-start gap-3">
-                    <MessageSquare className="w-4 h-4 mt-0.5 flex-shrink-0 text-neutral-500 group-hover:text-neutral-300" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-neutral-200 truncate group-hover:text-white">
-                        {item.request}
-                      </p>
-                      <p className="text-xs text-neutral-500 mt-1">
-                        {new Date(item.createdAt).toLocaleDateString('ru-RU', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </p>
+                  <button
+                    onClick={() => handleHistoryClick(item)}
+                    className="w-full text-left px-3 py-3 pr-10 rounded-xl hover:bg-neutral-800 transition-smooth"
+                  >
+                    <div className="flex items-start gap-3">
+                      <MessageSquare className="w-4 h-4 mt-0.5 flex-shrink-0 text-neutral-500 group-hover:text-neutral-300" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-neutral-200 truncate group-hover:text-white">
+                          {item.request}
+                        </p>
+                        <p className="text-xs text-neutral-500 mt-1">
+                          {new Date(item.createdAt).toLocaleDateString('ru-RU', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </button>
+                  </button>
+                  <button
+                    onClick={(e) => handleDeleteChat(e, item.id)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-neutral-700 transition-all"
+                    title="Удалить чат"
+                  >
+                    <Trash2 className="w-4 h-4 text-neutral-400 hover:text-error-400" />
+                  </button>
+                </div>
               ))}
             </div>
           ) : (
@@ -341,7 +367,15 @@ function App() {
         />
       )}
     </div>
-    </ToastProvider>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
     </ThemeProvider>
   );
 }

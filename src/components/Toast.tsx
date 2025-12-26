@@ -36,10 +36,10 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
 
     setToasts((prev) => [...prev, newToast]);
 
-    // Auto-dismiss after 3 seconds
+    // Auto-dismiss after 2 seconds
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3000);
+    }, 2000);
   }, []);
 
   const dismissToast = useCallback((id: string) => {
@@ -49,22 +49,22 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
   const getIcon = (type: ToastType) => {
     switch (type) {
       case 'success':
-        return <CheckCircle2 className="w-5 h-5 text-success-500 flex-shrink-0" />;
+        return <CheckCircle2 className="w-5 h-5 text-white flex-shrink-0" />;
       case 'error':
-        return <AlertCircle className="w-5 h-5 text-error-500 flex-shrink-0" />;
+        return <AlertCircle className="w-5 h-5 text-white flex-shrink-0" />;
       case 'info':
-        return <Info className="w-5 h-5 text-primary-500 flex-shrink-0" />;
+        return <Info className="w-5 h-5 text-white flex-shrink-0" />;
     }
   };
 
   const getStyles = (type: ToastType) => {
     switch (type) {
       case 'success':
-        return 'bg-success-50 border-success-200 text-success-800';
+        return 'bg-success-600 border-success-700 text-white';
       case 'error':
-        return 'bg-error-50 border-error-200 text-error-800';
+        return 'bg-error-600 border-error-700 text-white';
       case 'info':
-        return 'bg-primary-50 border-primary-200 text-primary-800';
+        return 'bg-primary-600 border-primary-700 text-white';
     }
   };
 
@@ -97,10 +97,10 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
             <span className="text-sm font-medium flex-1 leading-snug">{toast.message}</span>
             <button
               onClick={() => dismissToast(toast.id)}
-              className="p-1 rounded-lg hover:bg-black/5 transition-colors flex-shrink-0 touch-manipulation"
+              className="p-1 rounded-lg hover:bg-white/20 transition-colors flex-shrink-0 touch-manipulation"
               aria-label="Dismiss notification"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4 text-white" />
             </button>
           </div>
         ))}
